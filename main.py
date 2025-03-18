@@ -1,49 +1,25 @@
-import requests
-import datetime
 import streamlit as st
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+import datetime
 
-# 腾讯问卷提交链接（替换为你的实际问卷链接）
+# 设置页面布局
+st.set_page_config(page_title="AI 经济实验平台 - OLS 回归分析", layout="wide")
+
+# **📌 侧边栏 - 记录访问**
+st.sidebar.header("📋 访问记录")
 TENCENT_DOCS_FORM_URL = "https://docs.qq.com/form/page/DQ3pwaVdsY21Pc3BQ"
 
-# **获取用户信息**
-def get_user_info():
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # **获取 IP 地址**
-    try:
-        ip = requests.get("https://api64.ipify.org?format=json").json().get("ip", "未知")
-    except:
-        ip = "未知"
+# 让用户记录访问信息
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+device = st.sidebar.selectbox("请选择你的设备", ["Windows", "Mac", "iPhone", "Android", "其他"])
+st.sidebar.write("请点击下方按钮，提交你的访问信息：")
+if st.sidebar.button("📋 记录访问信息"):
+    st.sidebar.markdown(f"[点击填写访问记录]({TENCENT_DOCS_FORM_URL})", unsafe_allow_html=True)
+    st.sidebar.success("✅ 请填写腾讯问卷来记录访问信息！")
 
-    # **获取设备信息**
-    try:
-        user_agent = st.experimental_user_agent()
-        device = user_agent if user_agent else "未知设备"
-    except:
-        device = "未知设备"
-
-    return timestamp, ip, device
-
-# **自动提交访问数据**
-def log_visit():
-    timestamp, ip, device = get_user_info()
-
-    # **构造腾讯问卷提交的 URL**
-    visit_url = f"{TENCENT_DOCS_FORM_URL}?Q1={timestamp}&Q2={ip}&Q3={device}"
-
-    # **后台请求腾讯问卷**
-    response = requests.get(visit_url)
-
-    if response.status_code == 200:
-        st.sidebar.success("✅ 访问数据已自动记录！")
-    else:
-        st.sidebar.warning("⚠️ 访问记录失败，请稍后重试")
-
-# **📌 侧边栏 - 访问记录**
-st.sidebar.header("📋 访问记录")
-log_visit()
-
-# **📌 主界面 - OLS 回归分析（不变，保持原有功能）**
+# **📌 主界面 - OLS 回归分析**
 st.title("📊 AI 经济实验平台 - OLS 回归分析（教学版）")
 st.markdown("---")
 
