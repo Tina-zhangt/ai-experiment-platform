@@ -4,9 +4,10 @@ import numpy as np
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from statsmodels.sandbox.regression.gmm import IV2SLS
-import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
+from statsmodels.stats.diagnostic import het_breuschpagan
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 # **📌 设置 Streamlit 页面**
 st.set_page_config(page_title="AI 经济实验平台", layout="wide")
@@ -91,7 +92,27 @@ elif model_type == "IV 估计":
 st.subheader("📊 估计结果")
 st.text(model.summary())
 
-# **📌 6. 可视化回归结果**
+# **📌 6. 结果分析**
+st.subheader("📋 结果分析")
+
+# **方差膨胀因子（VIF）**
+if len(x_cols) > 1:
+    vif_data = pd.DataFrame()
+    vif_data["变量"] = x_cols
+    vif_data["VIF 值"] = [variance_inflation_factor(X.values, i) for i in range(1, X.shape[1])]
+    st.write("**📌 方差膨胀因子（VIF）**")
+    st.dataframe(vif_data)
+    if vif_data["VIF 值"].max() > 10:
+        st.warning("⚠️ VIF 过高，可能存在多重共线性问题！建议删除高度相关变量。")
+
+# **异方差检验**
+bp_test = het_breuschpagan(model.resid, X)
+st.write("**📌 Breusch-Pagan 异方差检验**")
+st.write(f"📊 检验统计量: {bp_test[0]}, p值: {bp_test[1]}")
+if bp_test[1] < 0.05:
+    st.warning("⚠️ 检验结果显著，模型可能存在异方差问题。建议使用稳健标准误。")
+
+# **📌 7. 可视化回归结果**
 st.subheader("📈 数据可视化")
 plot_option = st.selectbox("选择可视化方式:", ["散点图", "散点图 + 回归线 + 公式", "真实值 vs 预测值"])
 
@@ -108,13 +129,3 @@ elif plot_option == "真实值 vs 预测值":
 ax.set_xlabel(x_cols[0])
 ax.set_ylabel(y_col)
 st.pyplot(fig)
-
-# **📌 7. 方法介绍**
-st.sidebar.header("📘 方法介绍")
-method_intro = {
-    "OLS 估计": "普通最小二乘法（OLS），适用于无内生性问题的回归分析。",
-    "OLS + 稳健标准误": "OLS 方法，但使用稳健标准误以减少异方差问题的影响。",
-    "GLS 估计": "广义最小二乘法（GLS），适用于误差项存在自相关或异方差的问题。",
-    "IV 估计": "工具变量回归（IV），用于解决内生性问题，并自动进行工具变量有效性检验。"
-}
-st.sidebar.info(method_intro[model_type])
