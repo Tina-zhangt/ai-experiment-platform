@@ -43,7 +43,7 @@ def log_visit():
 st.sidebar.header("📋 访问记录")
 log_visit()
 
-# **📌 主界面 - OLS 回归分析**
+# **📌 主界面 - OLS 回归分析（不变，保持原有功能）**
 st.title("📊 AI 经济实验平台 - OLS 回归分析（教学版）")
 st.markdown("---")
 
